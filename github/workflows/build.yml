@@ -1,0 +1,42 @@
+name: Deploy Single File
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Inline External Resources except images
+        run: |
+          mkdir -p dist
+          npx html-inline-external --src index.html --dest dist/index.html --minify
+          cp -r images dist/
+      - name: Configure Pages Artifact
+        uses: actions/configure-pages@v4
+
+      - name: Upload Build Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dist'
+
+      - name: Push
+        uses: actions/deploy-pages@v4
